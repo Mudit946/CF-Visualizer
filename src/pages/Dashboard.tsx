@@ -6,7 +6,6 @@ import { useTraining } from '../context/TrainingContext';
 
 import { Card, CardContent, cn } from '../components/ui/card';
 import { Button } from '../components/ui/button';
-import { Skeleton } from '../components/ui/skeleton';
 import {
     Activity, Trophy, Star, Target, BarChart3, Bookmark, Layers,
     Users, Swords, Flame,
@@ -57,7 +56,7 @@ export function Dashboard() {
                     codeforcesAPI.getUserRating(handle).catch(() => []),
                     codeforcesAPI.getUserStatus(handle)
                 ]);
-                setUser(userData);
+                setUser(userData[0]);
                 setRatingHist(ratingData);
                 setSubmissions(statusData);
             } catch (err: any) {

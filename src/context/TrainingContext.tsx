@@ -7,18 +7,18 @@ interface TrainingContextType {
     setFocusMode: (val: boolean) => void;
     bookmarks: Problem[];
     addBookmark: (prob: Problem) => void;
-    removeBookmark: (contestId: number, index: string) => void;
-    isBookmarked: (contestId: number, index: string) => boolean;
+    removeBookmark: (contestId: number | undefined, index: string) => void;
+    isBookmarked: (contestId: number | undefined, index: string) => boolean;
     queue: Problem[];
     addToQueue: (prob: Problem) => void;
-    removeFromQueue: (contestId: number, index: string) => void;
-    isInQueue: (contestId: number, index: string) => boolean;
+    removeFromQueue: (contestId: number | undefined, index: string) => void;
+    isInQueue: (contestId: number | undefined, index: string) => boolean;
     notes: Record<string, string>; // key: "contestId-index"
-    saveNote: (contestId: number, index: string, note: string) => void;
-    getNote: (contestId: number, index: string) => string;
+    saveNote: (contestId: number | undefined, index: string, note: string) => void;
+    getNote: (contestId: number | undefined, index: string) => string;
     completedProblems: string[]; // array of "contestId-index"
-    toggleComplete: (contestId: number, index: string) => void;
-    isCompleted: (contestId: number, index: string) => boolean;
+    toggleComplete: (contestId: number | undefined, index: string) => void;
+    isCompleted: (contestId: number | undefined, index: string) => boolean;
 }
 
 const TrainingContext = createContext<TrainingContextType | undefined>(undefined);
@@ -36,37 +36,37 @@ export function TrainingProvider({ children }: { children: ReactNode }) {
         }
     };
 
-    const removeBookmark = (contestId: number, index: string) => {
+    const removeBookmark = (contestId: number | undefined, index: string) => {
         setBookmarks(bookmarks.filter(p => !(p.contestId === contestId && p.index === index)));
     };
 
-    const isBookmarked = (contestId: number, index: string) => {
+    const isBookmarked = (contestId: number | undefined, index: string) => {
         return bookmarks.some(p => p.contestId === contestId && p.index === index);
     };
 
     const addToQueue = (prob: Problem) => {
-        if (!isInQueue(prob.contestId!, prob.index)) {
+        if (!isInQueue(prob.contestId, prob.index)) {
             setQueue([...queue, prob]);
         }
     };
 
-    const removeFromQueue = (contestId: number, index: string) => {
+    const removeFromQueue = (contestId: number | undefined, index: string) => {
         setQueue(queue.filter(p => !(p.contestId === contestId && p.index === index)));
     };
 
-    const isInQueue = (contestId: number, index: string) => {
+    const isInQueue = (contestId: number | undefined, index: string) => {
         return queue.some(p => p.contestId === contestId && p.index === index);
     };
 
-    const saveNote = (contestId: number, index: string, note: string) => {
+    const saveNote = (contestId: number | undefined, index: string, note: string) => {
         setNotes({ ...notes, [`${contestId}-${index}`]: note });
     };
 
-    const getNote = (contestId: number, index: string) => {
+    const getNote = (contestId: number | undefined, index: string) => {
         return notes[`${contestId}-${index}`] || '';
     };
 
-    const toggleComplete = (contestId: number, index: string) => {
+    const toggleComplete = (contestId: number | undefined, index: string) => {
         const id = `${contestId}-${index}`;
         if (completedProblems.includes(id)) {
             setCompletedProblems(completedProblems.filter(p => p !== id));
@@ -75,7 +75,7 @@ export function TrainingProvider({ children }: { children: ReactNode }) {
         }
     };
 
-    const isCompleted = (contestId: number, index: string) => {
+    const isCompleted = (contestId: number | undefined, index: string) => {
         return completedProblems.includes(`${contestId}-${index}`);
     };
 

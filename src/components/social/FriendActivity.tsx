@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { type Submission, codeforcesAPI } from '../../lib/api';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { useLocalStorage } from '../../hooks/useLocalStorage';
-import { Activity, Clock, CheckCircle2, XCircle, ExternalLink } from 'lucide-react';
+import { Activity, ExternalLink } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 
 export function FriendActivity() {

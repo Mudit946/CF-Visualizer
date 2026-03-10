@@ -25,7 +25,7 @@ export function CompareUsers({ currentUser }: CompareProps) {
         setError(null);
         try {
             const userData = await codeforcesAPI.getUserInfo(handle);
-            setTargetUser(userData);
+            setTargetUser(userData[0]);
         } catch (err: any) {
             setError(err.message || 'User not found');
         } finally {

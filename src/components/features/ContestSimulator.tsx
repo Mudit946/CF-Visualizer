@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { type Problem } from '../../lib/api';
-import { Card, CardHeader, CardTitle, CardContent } from '../ui/card';
+import { Card, CardContent } from '../ui/card';
 import { Button } from '../ui/button';
-import { Timer, StopCircle, Trophy, ExternalLink, AlertTriangle } from 'lucide-react';
+import { Timer, StopCircle, Trophy, AlertTriangle } from 'lucide-react';
 import { ProblemCard } from './ProblemCard';
 
 interface ContestSimulatorProps {

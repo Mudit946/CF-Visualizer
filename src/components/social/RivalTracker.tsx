@@ -1,14 +1,14 @@
 import { useState, useEffect } from 'react';
-import { type UserInfo, codeforcesAPI } from '../../lib/api';
+import { type UserData, codeforcesAPI } from '../../lib/api';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../ui/card';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
-import { Users, UserMinus, UserPlus, TrendingUp, Award, Target, Trash2 } from 'lucide-react';
+import { Users, UserMinus, UserPlus, Target } from 'lucide-react';
 import { useLocalStorage } from '../../hooks/useLocalStorage';
 
 export function RivalTracker() {
     const [rivals, setRivals] = useLocalStorage<string[]>('rival-handles', []);
-    const [rivalData, setRivalData] = useState<UserInfo[]>([]);
+    const [rivalData, setRivalData] = useState<UserData[]>([]);
     const [newRival, setNewRival] = useState('');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -42,7 +42,7 @@ export function RivalTracker() {
         setLoading(true);
         setError(null);
         try {
-            await codeforcesAPI.getUserInfo([handle]);
+            await codeforcesAPI.getUserInfo(handle);
             setRivals([...rivals, handle]);
             setNewRival('');
         } catch (err) {
@@ -120,17 +120,18 @@ export function RivalTracker() {
                                             <p className="font-mono text-xs text-gray-400">+{user.maxRating || '-'}</p>
                                         </div>
                                         <div className="text-center">
-                                            <p className="text-[9px] text-gray-500 uppercase">Contests</p>
-                                            <p className="font-mono font-bold text-cf-secondary">42</p> {/* Placeholder for contest count */}
+                                            <p className="text-[9px] text-gray-500 uppercase">Solve</p>
+                                            <p className="font-mono font-bold text-cf-secondary">{user.contribution || 0}</p>
                                         </div>
                                     </div>
 
                                     <div className="mt-4 flex gap-2">
-                                        <Button variant="outline" size="sm" className="w-full h-7 text-[10px] border-cf-border/50 hover:bg-cf-secondary/10 hover:text-cf-secondary group/btn" asChild>
-                                            <a href={`/dashboard?handle=${user.handle}`}>
-                                                View Info
-                                            </a>
-                                        </Button>
+                                        <a
+                                            href={`/profile/${user.handle}`}
+                                            className="w-full h-7 text-[10px] border border-cf-border/50 rounded flex items-center justify-center hover:bg-cf-secondary/10 hover:text-cf-secondary transition-colors"
+                                        >
+                                            View Info
+                                        </a>
                                     </div>
                                 </CardContent>
                             </Card>

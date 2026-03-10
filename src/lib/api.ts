@@ -92,12 +92,13 @@ async function fetchCF<T>(endpoint: string, params: Record<string, string> = {})
 }
 
 export const codeforcesAPI = {
-    getUserInfo: async (handle: string): Promise<UserData> => {
-        const users = await fetchCF<UserData[]>('/user.info', { handles: handle });
+    getUserInfo: async (handle: string | string[]): Promise<UserData[]> => {
+        const handles = Array.isArray(handle) ? handle.join(';') : handle;
+        const users = await fetchCF<UserData[]>('/user.info', { handles });
         if (!users || users.length === 0) {
             throw new APIError('User not found');
         }
-        return users[0];
+        return users;
     },
 
     getUserRating: async (handle: string): Promise<RatingChange[]> => {

@@ -3,7 +3,7 @@ import { cn } from "./card"
 
 export interface ButtonProps
     extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-    variant?: "default" | "outline" | "ghost" | "link"
+    variant?: "default" | "outline" | "ghost" | "link" | "destructive"
     size?: "default" | "sm" | "lg" | "icon"
 }
 
@@ -15,6 +15,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
                     "inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50",
                     {
                         "bg-cf-primary text-white hover:bg-cf-primary/90": variant === "default",
+                        "bg-red-500 text-white hover:bg-red-500/90": variant === "destructive",
                         "border border-cf-border bg-transparent hover:bg-cf-card": variant === "outline",
                         "hover:bg-cf-card text-gray-300 hover:text-white": variant === "ghost",
                         "text-cf-primary underline-offset-4 hover:underline": variant === "link",
