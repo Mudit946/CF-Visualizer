@@ -4,12 +4,12 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { type UserData, type RatingChange, type Submission, codeforcesAPI } from '../lib/api';
 import { useTraining } from '../context/TrainingContext';
 
-import { Card, CardContent, CardHeader, CardTitle, cn } from '../components/ui/card';
+import { Card, CardContent, cn } from '../components/ui/card';
 import { Button } from '../components/ui/button';
 import { Skeleton } from '../components/ui/skeleton';
 import {
     Activity, Trophy, Star, Target, BarChart3, Bookmark, Layers,
-    Users, Zap, Swords, Flame, Sparkles,
+    Users, Swords, Flame,
     Eye, EyeOff
 } from 'lucide-react';
 
@@ -18,7 +18,6 @@ import { HeatmapChart } from '../components/charts/HeatmapChart';
 import { DifficultyChart } from '../components/charts/DifficultyChart';
 import { TagsChart } from '../components/charts/TagsChart';
 
-import { ProblemRecommender } from '../components/tools/ProblemRecommender';
 import { ContestGenerator } from '../components/tools/ContestGenerator';
 import { ContestHistory } from '../components/tools/ContestHistory';
 import { UpsolvingHelper } from '../components/tools/UpsolvingHelper';
@@ -31,6 +30,9 @@ import { LadderGenerator } from '../components/features/LadderGenerator';
 import { DifficultyPath } from '../components/features/DifficultyPath';
 import { RivalTracker } from '../components/social/RivalTracker';
 import { FriendActivity } from '../components/social/FriendActivity';
+import { PracticeQueue } from '../components/features/PracticeQueue';
+import { BookmarksPage } from '../components/features/BookmarksPage';
+import { ProblemNotes } from '../components/features/ProblemNotes';
 
 export function Dashboard() {
     const { handle } = useParams<{ handle: string }>();
@@ -223,7 +225,7 @@ export function Dashboard() {
                             </div>
                             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                                 <LadderGenerator submissions={submissions} user={user} />
-                                <DifficultyPath submissions={submissions} />
+                                <DifficultyPath submissions={submissions} user={user} />
                             </div>
                         </div>
                     )}
@@ -258,10 +260,16 @@ export function Dashboard() {
                     )}
 
                     {activeTab === 'saved' && (
-                        <div className="text-center py-20 bg-cf-card/20 rounded-2xl border border-cf-border/30 border-dashed">
-                            <Bookmark className="w-12 h-12 text-gray-600 mx-auto mb-4" />
-                            <h3 className="text-xl font-bold text-gray-400">Personal Library</h3>
-                            <p className="text-gray-500 mt-2">Bookmarked problems and custom practice lists will appear here.</p>
+                        <div className="space-y-6">
+                            <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+                                <div className="lg:col-span-1">
+                                    <PracticeQueue />
+                                </div>
+                                <div className="lg:col-span-3">
+                                    <BookmarksPage />
+                                </div>
+                            </div>
+                            <ProblemNotes />
                         </div>
                     )}
                 </motion.div>
