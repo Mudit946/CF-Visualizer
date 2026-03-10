@@ -1,0 +1,29 @@
+@import "tailwindcss";
+
+@theme {
+  --color-cf-dark: #0f172a;
+  --color-cf-darker: #020617;
+  --color-cf-card: #1e293b;
+  --color-cf-border: #334155;
+  --color-cf-primary: #38bdf8;
+  --color-cf-accent: #f472b6;
+
+  /* CF Roles colors */
+  --color-rank-legendary: #ff0000;
+  --color-rank-igm: #ff0000;
+  --color-rank-gm: #ff0000;
+  --color-rank-im: #ff8c00;
+  --color-rank-master: #ff8c00;
+  --color-rank-cm: #aa00aa;
+  --color-rank-expert: #0000ff;
+  --color-rank-specialist: #03a89e;
+  --color-rank-pupil: #008000;
+  --color-rank-newbie: #808080;
+}
+
+@layer base {
+  body {
+    background-color: var(--color-cf-darker);
+    color: #e5e5e5;
+  }
+}

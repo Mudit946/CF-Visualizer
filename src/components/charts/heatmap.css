@@ -1,0 +1,32 @@
+/* Override react-calendar-heatmap colors to match dark theme GitHub style */
+.react-calendar-heatmap .color-empty {
+    fill: #2e3134;
+}
+
+.react-calendar-heatmap .color-scale-1 {
+    fill: #0e4429;
+}
+
+.react-calendar-heatmap .color-scale-2 {
+    fill: #006d32;
+}
+
+.react-calendar-heatmap .color-scale-3 {
+    fill: #26a641;
+}
+
+.react-calendar-heatmap .color-scale-4 {
+    fill: #39d353;
+}
+
+.react-calendar-heatmap text {
+    fill: #8b949e;
+    font-size: 10px;
+}
+
+.react-calendar-heatmap rect {
+    rx: 2;
+    /* slight rounding */
+    stroke: #1e1e1e;
+    stroke-width: 1px;
+}

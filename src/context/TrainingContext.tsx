@@ -1,0 +1,101 @@
+import { createContext, useContext, type ReactNode } from 'react';
+import { useLocalStorage } from '../hooks/useLocalStorage';
+import type { Problem } from '../lib/api';
+
+interface TrainingContextType {
+    focusMode: boolean;
+    setFocusMode: (val: boolean) => void;
+    bookmarks: Problem[];
+    addBookmark: (prob: Problem) => void;
+    removeBookmark: (contestId: number, index: string) => void;
+    isBookmarked: (contestId: number, index: string) => boolean;
+    queue: Problem[];
+    addToQueue: (prob: Problem) => void;
+    removeFromQueue: (contestId: number, index: string) => void;
+    isInQueue: (contestId: number, index: string) => boolean;
+    notes: Record<string, string>; // key: "contestId-index"
+    saveNote: (contestId: number, index: string, note: string) => void;
+    getNote: (contestId: number, index: string) => string;
+    completedProblems: string[]; // array of "contestId-index"
+    toggleComplete: (contestId: number, index: string) => void;
+    isCompleted: (contestId: number, index: string) => boolean;
+}
+
+const TrainingContext = createContext<TrainingContextType | undefined>(undefined);
+
+export function TrainingProvider({ children }: { children: ReactNode }) {
+    const [focusMode, setFocusMode] = useLocalStorage('focus-mode', false);
+    const [bookmarks, setBookmarks] = useLocalStorage<Problem[]>('bookmarks', []);
+    const [queue, setQueue] = useLocalStorage<Problem[]>('practice-queue', []);
+    const [notes, setNotes] = useLocalStorage<Record<string, string>>('problem-notes', {});
+    const [completedProblems, setCompletedProblems] = useLocalStorage<string[]>('completed-problems', []);
+
+    const addBookmark = (prob: Problem) => {
+        if (!isBookmarked(prob.contestId!, prob.index)) {
+            setBookmarks([...bookmarks, prob]);
+        }
+    };
+
+    const removeBookmark = (contestId: number, index: string) => {
+        setBookmarks(bookmarks.filter(p => !(p.contestId === contestId && p.index === index)));
+    };
+
+    const isBookmarked = (contestId: number, index: string) => {
+        return bookmarks.some(p => p.contestId === contestId && p.index === index);
+    };
+
+    const addToQueue = (prob: Problem) => {
+        if (!isInQueue(prob.contestId!, prob.index)) {
+            setQueue([...queue, prob]);
+        }
+    };
+
+    const removeFromQueue = (contestId: number, index: string) => {
+        setQueue(queue.filter(p => !(p.contestId === contestId && p.index === index)));
+    };
+
+    const isInQueue = (contestId: number, index: string) => {
+        return queue.some(p => p.contestId === contestId && p.index === index);
+    };
+
+    const saveNote = (contestId: number, index: string, note: string) => {
+        setNotes({ ...notes, [`${contestId}-${index}`]: note });
+    };
+
+    const getNote = (contestId: number, index: string) => {
+        return notes[`${contestId}-${index}`] || '';
+    };
+
+    const toggleComplete = (contestId: number, index: string) => {
+        const id = `${contestId}-${index}`;
+        if (completedProblems.includes(id)) {
+            setCompletedProblems(completedProblems.filter(p => p !== id));
+        } else {
+            setCompletedProblems([...completedProblems, id]);
+        }
+    };
+
+    const isCompleted = (contestId: number, index: string) => {
+        return completedProblems.includes(`${contestId}-${index}`);
+    };
+
+    return (
+        <TrainingContext.Provider value={{
+            focusMode, setFocusMode,
+            bookmarks, addBookmark, removeBookmark, isBookmarked,
+            queue, addToQueue, removeFromQueue, isInQueue,
+            notes, saveNote, getNote,
+            completedProblems, toggleComplete, isCompleted
+        }}>
+            {children}
+        </TrainingContext.Provider>
+    );
+}
+
+export function useTraining() {
+    const context = useContext(TrainingContext);
+    if (context === undefined) {
+        throw new Error('useTraining must be used within a TrainingProvider');
+    }
+    return context;
+}
