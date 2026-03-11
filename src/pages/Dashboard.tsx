@@ -9,7 +9,7 @@ import { Button } from '../components/ui/button';
 import {
     Activity, Trophy, Star, Target, BarChart3, Bookmark, Layers,
     Users, Swords, Flame,
-    Eye, EyeOff
+    Eye, EyeOff, Brain
 } from 'lucide-react';
 
 import { RatingChart } from '../components/charts/RatingChart';
@@ -22,6 +22,7 @@ import { ContestHistory } from '../components/tools/ContestHistory';
 import { UpsolvingHelper } from '../components/tools/UpsolvingHelper';
 import { CompareUsers } from '../components/tools/CompareUsers';
 
+import { WeakTopicAnalyzer } from '../components/features/WeakTopicAnalyzer';
 import { DailyChallenge } from '../components/features/DailyChallenge';
 import { RandomProblem } from '../components/features/RandomProblem';
 import { TopicTrainer } from '../components/features/TopicTrainer';
@@ -32,6 +33,11 @@ import { FriendActivity } from '../components/social/FriendActivity';
 import { PracticeQueue } from '../components/features/PracticeQueue';
 import { BookmarksPage } from '../components/features/BookmarksPage';
 import { ProblemNotes } from '../components/features/ProblemNotes';
+import { GamifiedStats } from '../components/features/GamifiedStats';
+import { BadgeSystem } from '../components/features/BadgeSystem';
+import { AIPracticeCoach } from '../components/features/AIPracticeCoach';
+import { RatingPredictor } from '../components/features/RatingPredictor';
+import { AIEditorialExplainer } from '../components/features/AIEditorialExplainer';
 
 export function Dashboard() {
     const { handle } = useParams<{ handle: string }>();
@@ -111,6 +117,7 @@ export function Dashboard() {
 
     const TABS = [
         { id: 'analytics', label: 'Analytics', icon: BarChart3 },
+        { id: 'intelligence', label: 'AI Coach', icon: Brain },
         { id: 'training', label: 'Training', icon: Target },
         { id: 'contests', label: 'Contests', icon: Swords },
         { id: 'trackers', label: 'Trackers', icon: Layers },
@@ -120,6 +127,8 @@ export function Dashboard() {
 
     return (
         <div className="container mx-auto p-4 space-y-6">
+            <BadgeSystem submissions={submissions} ratingHistory={ratingHist} />
+
             <Card className="overflow-hidden border-cf-border/50 bg-cf-card/30 backdrop-blur-xl">
                 <CardContent className="p-6 md:p-8 flex flex-col md:flex-row items-center md:items-start gap-6">
                     <img
@@ -204,9 +213,15 @@ export function Dashboard() {
                 >
                     {activeTab === 'analytics' && (
                         <div className="space-y-6">
-                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                                <RatingChart data={ratingHist} />
-                                <HeatmapChart submissions={submissions} />
+                            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                                <div className="lg:col-span-2 space-y-6">
+                                    <RatingChart data={ratingHist} />
+                                    <HeatmapChart submissions={submissions} />
+                                </div>
+                                <div className="lg:col-span-1 space-y-6">
+                                    <WeakTopicAnalyzer submissions={submissions} />
+                                    <GamifiedStats />
+                                </div>
                             </div>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <DifficultyChart submissions={submissions} />
@@ -215,12 +230,29 @@ export function Dashboard() {
                         </div>
                     )}
 
+                    {activeTab === 'intelligence' && (
+                        <div className="space-y-8">
+                            <AIPracticeCoach submissions={submissions} userRating={user.rating || 0} />
+                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                                <RatingPredictor history={ratingHist} />
+                                <AIEditorialExplainer />
+                            </div>
+                        </div>
+                    )}
+
                     {activeTab === 'training' && (
                         <div className="space-y-6">
-                            <DailyChallenge submissions={submissions} user={user} />
-                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                                <RandomProblem submissions={submissions} user={user} />
-                                <TopicTrainer submissions={submissions} user={user} />
+                            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                                <div className="lg:col-span-2 space-y-6">
+                                    <DailyChallenge submissions={submissions} user={user} />
+                                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                                        <RandomProblem submissions={submissions} user={user} />
+                                        <TopicTrainer submissions={submissions} user={user} />
+                                    </div>
+                                </div>
+                                <div className="lg:col-span-1">
+                                    <GamifiedStats />
+                                </div>
                             </div>
                             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                                 <LadderGenerator submissions={submissions} user={user} />
@@ -229,51 +261,51 @@ export function Dashboard() {
                         </div>
                     )}
 
-                    {activeTab === 'contests' && (
-                        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                            <div className="lg:col-span-2 space-y-6">
-                                <ContestGenerator submissions={submissions} />
-                            </div>
-                            <div className="lg:col-span-1">
-                                <ContestHistory ratingHistory={ratingHist} />
-                            </div>
+                {activeTab === 'contests' && (
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        <div className="lg:col-span-2 space-y-6">
+                            <ContestGenerator submissions={submissions} />
                         </div>
-                    )}
-
-                    {activeTab === 'trackers' && (
-                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                            <UpsolvingHelper submissions={submissions} ratingHistory={ratingHist} />
-                            <CompareUsers currentUser={user} />
+                        <div className="lg:col-span-1">
+                            <ContestHistory ratingHistory={ratingHist} />
                         </div>
-                    )}
+                    </div>
+                )}
 
-                    {activeTab === 'social' && (
+                {activeTab === 'trackers' && (
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <UpsolvingHelper submissions={submissions} ratingHistory={ratingHist} />
+                        <CompareUsers currentUser={user} />
+                    </div>
+                )}
+
+                {activeTab === 'social' && (
+                    <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+                        <div className="lg:col-span-3">
+                            <RivalTracker />
+                        </div>
+                        <div className="lg:col-span-1">
+                            <FriendActivity />
+                        </div>
+                    </div>
+                )}
+
+                {activeTab === 'saved' && (
+                    <div className="space-y-6">
                         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-                            <div className="lg:col-span-3">
-                                <RivalTracker />
-                            </div>
                             <div className="lg:col-span-1">
-                                <FriendActivity />
+                                <PracticeQueue />
+                            </div>
+                            <div className="lg:col-span-3">
+                                <BookmarksPage />
                             </div>
                         </div>
-                    )}
-
-                    {activeTab === 'saved' && (
-                        <div className="space-y-6">
-                            <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-                                <div className="lg:col-span-1">
-                                    <PracticeQueue />
-                                </div>
-                                <div className="lg:col-span-3">
-                                    <BookmarksPage />
-                                </div>
-                            </div>
-                            <ProblemNotes />
-                        </div>
-                    )}
-                </motion.div>
-            </AnimatePresence>
-        </div>
+                        <ProblemNotes />
+                    </div>
+                )}
+            </motion.div>
+        </AnimatePresence>
+        </div >
     );
 }
 

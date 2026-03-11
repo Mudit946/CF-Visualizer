@@ -1,5 +1,6 @@
 import { createContext, useContext, type ReactNode } from 'react';
 import { useLocalStorage } from '../hooks/useLocalStorage';
+import { useGamification } from '../hooks/useGamification';
 import type { Problem } from '../lib/api';
 
 interface TrainingContextType {
@@ -19,6 +20,15 @@ interface TrainingContextType {
     completedProblems: string[]; // array of "contestId-index"
     toggleComplete: (contestId: number | undefined, index: string) => void;
     isCompleted: (contestId: number | undefined, index: string) => boolean;
+    xp: number;
+    level: number;
+    streak: number;
+    xpForNextLevel: number;
+    badges: string[]; // array of badge IDs
+    awardXP: (amount: number) => void;
+    unlockBadge: (badgeId: string) => void;
+    recordSolve: (difficulty: number) => void;
+    updateStreak: () => void;
 }
 
 const TrainingContext = createContext<TrainingContextType | undefined>(undefined);
@@ -29,6 +39,14 @@ export function TrainingProvider({ children }: { children: ReactNode }) {
     const [queue, setQueue] = useLocalStorage<Problem[]>('practice-queue', []);
     const [notes, setNotes] = useLocalStorage<Record<string, string>>('problem-notes', {});
     const [completedProblems, setCompletedProblems] = useLocalStorage<string[]>('completed-problems', []);
+    const [badges, setBadges] = useLocalStorage<string[]>('user-badges', []);
+
+    const { 
+        xp, level, streak, xpForNextLevel, 
+        addXP: awardXP, 
+        recordSolve, 
+        updateStreak 
+    } = useGamification();
 
     const addBookmark = (prob: Problem) => {
         if (!isBookmarked(prob.contestId!, prob.index)) {
@@ -66,12 +84,19 @@ export function TrainingProvider({ children }: { children: ReactNode }) {
         return notes[`${contestId}-${index}`] || '';
     };
 
-    const toggleComplete = (contestId: number | undefined, index: string) => {
+    const unlockBadge = (badgeId: string) => {
+        if (!badges.includes(badgeId)) {
+            setBadges([...badges, badgeId]);
+        }
+    };
+
+    const toggleComplete = (contestId: number | undefined, index: string, difficulty?: number) => {
         const id = `${contestId}-${index}`;
         if (completedProblems.includes(id)) {
             setCompletedProblems(completedProblems.filter(p => p !== id));
         } else {
             setCompletedProblems([...completedProblems, id]);
+            recordSolve(difficulty || 1000);
         }
     };
 
@@ -85,7 +110,9 @@ export function TrainingProvider({ children }: { children: ReactNode }) {
             bookmarks, addBookmark, removeBookmark, isBookmarked,
             queue, addToQueue, removeFromQueue, isInQueue,
             notes, saveNote, getNote,
-            completedProblems, toggleComplete, isCompleted
+            completedProblems, toggleComplete, isCompleted,
+            xp, level, streak, xpForNextLevel, badges, 
+            awardXP, unlockBadge, recordSolve, updateStreak
         }}>
             {children}
         </TrainingContext.Provider>

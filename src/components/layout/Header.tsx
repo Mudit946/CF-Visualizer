@@ -13,7 +13,15 @@ export function Header() {
                         Codeforces <span className="text-cf-primary">Visualizer</span>
                     </span>
                 </Link>
-                <div className="flex items-center gap-4">
+                <div className="flex items-center gap-6">
+                    <nav className="hidden md:flex items-center gap-6">
+                        <Link to="/" className="text-sm font-medium text-gray-400 hover:text-white transition-colors">Home</Link>
+                        <Link to="/rooms" className="text-sm font-medium text-cf-primary hover:text-cf-primary/80 transition-colors flex items-center gap-2">
+                             Rooms
+                            <span className="flex h-2 w-2 rounded-full bg-cf-primary animate-pulse" />
+                        </Link>
+                    </nav>
+                    <div className="h-6 w-px bg-cf-border mx-2 hidden md:block" />
                     <a
                         href="https://github.com/codeforces"
                         target="_blank"

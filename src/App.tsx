@@ -2,6 +2,7 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { Header } from './components/layout/Header';
 import { Home } from './pages/Home';
 import { Dashboard } from './pages/Dashboard';
+import ContestRooms from './pages/ContestRooms';
 
 function App() {
   return (
@@ -12,6 +13,7 @@ function App() {
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/profile/:handle" element={<Dashboard />} />
+            <Route path="/rooms" element={<ContestRooms />} />
           </Routes>
         </main>
       </div>

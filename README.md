@@ -1,64 +1,123 @@
 # Codeforces Visualizer Pro
 
-Codeforces Visualizer Pro is a modern, vibrant, and fully-featured React web application designed to be the ultimate all-in-one analytics platform for Codeforces users. It combines the core features of popular Codeforces Chrome extensions into a single, seamless web experience.
+Codeforces Visualizer Pro is a modern full-stack analytics and training platform for competitive programmers. It transforms raw Codeforces data into actionable insights, structured training, and collaborative practice environments.
 
-## ✨ Features
+Unlike traditional tools that only show statistics, this platform focuses on performance analytics, gamified learning, and collaborative contest simulation.
 
-This platform provides an in-depth look at your competitive programming performance through intuitive charts and advanced custom tools.
+---
 
-### 📊 Core Analytics
-*   **Dynamic User Profiles:** Instantly search for any Codeforces handle to view their current rank, max rating, contribution, and followers.
-*   **Rating Progression Chart:** An interactive line chart displaying rating history over time, styled with Codeforces rank color backgrounds.
-*   **Submission Activity Heatmap:** An annual calendar heatmap (GitHub-style) to track daily submission consistency and activity.
-*   **Problem Difficulty Distribution:** A pie chart breaking down accepted problems by difficulty ranges (e.g., 800-1100, 1200-1500).
-*   **Top Tags Radar:** A radar chart visualizing the most prominent topic tags in a user's solved problem set.
+## 👁️ Vision
 
-### 🛠️ Advanced Tools (Extension Replacements)
-*   **Contest History & Delta Tracker:** A detailed log of all participated contests, showing the rank, final rating, and color-coded rating delta (+15, -20). Similar to the *CF Predictor* and *Carrot* extensions.
-*   **Upsolving Helper:** Automatically cross-references your participated contests with the problemset to find problems you attempted but missed. Suggests the best next targets for upsolving.
-*   **Compare Profiles:** Enter a rival's handle to do a side-by-side comparison of statistics such as Rating, Max Rating, Contribution, and Friends/Followers directly on the dashboard. Similar to *CF Enhancer*.
-*   **Practice Recommendation Engine:** An algorithm that analyzes your weak topics based on submission success rates and suggests fresh, unsolved problems at an appropriate difficulty level.
-*   **Virtual Mashup Generator:** Create a custom practice contest instantly by specifying a minimum rating, maximum rating, and the number of problems. The generator will randomly select unsolved problems within your parameters.
+The goal of this platform is to create a complete competitive programming training ecosystem where users can:
+- **Analyze** their Codeforces performance in depth.
+- **Identify** algorithmic weaknesses and blind spots.
+- **Practice** with personalized, growth-oriented recommendations.
+- **Compete** with friends in simulated environments.
+- **Track** daily progress with consistency metrics similar to fitness trackers.
+- **Improve** consistently through a gamified learning journey.
 
-### 🎨 Vibrant UI
-*   **Modern Aesthetics:** Built entirely with a sleek Dark Mode palette featuring vibrant neon accents, glassmorphic card overlays, and subtle gradients. 
-*   **Responsive Layout:** Fully responsive grid layout optimized for both desktop and mobile viewing.
+---
+
+## ✨ Core Features
+
+### 📊 Dynamic User Profiles
+Search for any Codeforces handle to view detailed statistics fetched dynamically from the official API:
+- **Real-time Stats:** Current rating, Max rating, and Rank.
+- **Visual Breakdown:** Submission history, contest participation, and solved problem distribution.
+
+### 📈 Rating Progression Analytics
+Interactive charts provide detailed insights into your competitive journey:
+- **Animated Graphs:** Smooth visual representation of rating over time.
+- **Rank Zones:** Backgrounds color-coded by Codeforces rating bands.
+- **Insightful Context:** Hover-based contest details and performance highlights.
+
+**Rating Band Reference:**
+| Rating | Rank |
+| :--- | :--- |
+| < 1200 | Newbie |
+| 1200–1399 | Pupil |
+| 1400–1599 | Specialist |
+| 1600–1899 | Expert |
+| 1900–2099 | Candidate Master |
+| 2100+ | Master |
+
+### 🗓️ Submission Activity Heatmap
+A GitHub-style calendar heatmap to visualize daily coding activity, tracking practice consistency, and longest streaks.
+
+### 📊 Performance Charts
+- **Problem Difficulty Distribution:** Understand your comfort zone with a breakdown of solved problems by rating.
+- **Tag Performance Radar:** Quick identification of strengths and weaknesses across algorithmic topics (DP, Graphs, Math, etc.).
+
+---
+
+## 🛠️ Advanced Training Tools
+
+### 🆘 Upsolving Assistant
+Automatically detects problems from past contests that you attempted but didn't solve, encouraging effective post-contest learning.
+
+### 🧠 Practice Recommendation Engine
+Analyzes your solved history to suggest problems in your **Growth Zone**: `Current Rating ± 200`.
+
+### 🎲 Virtual Mashup Generator
+Generate custom practice contests by specifying number of problems, difficulty ranges, and division simulation.
+
+### 📝 Training Context System
+- **Bookmarks:** Save problems to revisit.
+- **Practice Queue:** Organize your daily workflow.
+- **Personal Notes:** Attach hints or strategies to specific problems (stored locally).
+
+---
+
+## 🏗️ Architecture Overview
+
+Built as a high-performance React Single Page Application.
+
+### 🔄 Data Flow
+```mermaid
+graph TD
+    User([User]) -->|Enters Handle| Home[Home Page]
+    Home -->|Navigation| Dashboard[Dashboard Page]
+    Dashboard -->|Calls| API[Codeforces API Service]
+    API -->|Returns Data| Dashboard
+    Dashboard -->|Populates| Charts[Recharts Components]
+    Dashboard -->|Populates| Tools[Feature Tools]
+    Tools -->|Interact with| Context[Training Context]
+    Context <-->|Sync| LocalStorage[(Browser Local Storage)]
+```
+
+### 📂 Core Structure
+- **API Tier (`src/lib/api.ts`):** Robust abstraction over the official CF API.
+- **State (`src/context/`):** Persistent training context using custom hooks.
+- **UI Components:** Modular library divided into `charts`, `features`, `tools`, and `ui`.
+
+---
+
+## 🗺️ Future Roadmap
+
+We are constantly evolving the platform. Here are the features currently in development:
+
+### 👥 Collaborative Features
+- **Custom Contest Rooms:** Private rooms with live leaderboards and real-time tracking.
+- **1v1 Practice Battles:** Challenge friends to timed coding duels.
+
+### 🎮 Gamified Learning
+- **XP & Points System:** Earn experience for solving problems and completing daily goals.
+- **Achievement Badges:** Unlock honors like 🔥 7-Day Streak or 🧠 Graph Master.
+
+### 🤖 AI-Powered Features
+- **Weak Topic Analyzer:** automated detection of algorithmic blind spots.
+- **AI Practice Coach:** Personalized daily training plans.
+- **Rating Predictor:** Future rating forecasting based on accuracy and consistency.
+- **AI Editorial Explainer:** Simplified explanations of complex problem strategies.
 
 ---
 
 ## 💻 Tech Stack
 
-*   **Frontend Framework:** React 18, Vite
-*   **Routing:** React Router DOM
-*   **Styling:** Tailwind CSS (Utility classes and custom CSS variables)
-*   **Data Visualization:** Recharts, React Calendar Heatmap
-*   **Icons:** Lucide React
-*   **Utilities:** date-fns, clsx, tailwind-merge
-*   **API:** Official Codeforces API
-
----
-
-## 🚀 Getting Started
-
-To run Codeforces Visualizer Pro locally:
-
-1.  **Clone the Repository** and navigate to the project directory:
-    ```bash
-    cd cf-visualizer
-    ```
-
-2.  **Install Dependencies:**
-    ```bash
-    npm install
-    ```
-
-3.  **Start the Development Server:**
-    ```bash
-    npm run dev
-    ```
-
-4.  **View the Application:**
-    Open `http://localhost:5173` in your browser. Enter a Codeforces handle in the landing page search bar to dive into the dashboard!
+- **Core:** React 18, Vite, TypeScript
+- **Styling:** Tailwind CSS (Vibrant Dark Mode)
+- **Visualization:** Recharts, Framer Motion
+- **Services:** Codeforces API, LocalStorage API
 
 ---
 

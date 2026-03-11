@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import type { Problem } from '../../lib/api';
-import { Card, cn } from '../ui/card';
+import { Card } from '../ui/card';
 import { Button } from '../ui/button';
 import { useTraining } from '../../context/TrainingContext';
+import { cn } from '../../lib/utils';
 import {
     Bookmark,
     BookmarkCheck,
@@ -19,9 +20,10 @@ interface ProblemCardProps {
     problem: Problem;
     showEditorial?: boolean;
     isSimulation?: boolean;
+    className?: string;
 }
 
-export function ProblemCard({ problem, showEditorial = true, isSimulation = false }: ProblemCardProps) {
+export function ProblemCard({ problem, showEditorial = true, isSimulation = false, className }: ProblemCardProps) {
     const {
         focusMode,
         isBookmarked, addBookmark, removeBookmark,
@@ -54,7 +56,10 @@ export function ProblemCard({ problem, showEditorial = true, isSimulation = fals
     const youtubeSearch = `https://www.youtube.com/results?search_query=codeforces+${problem.contestId}+${problem.index}+tutorial`;
 
     return (
-        <Card className="group relative overflow-hidden border-cf-border/40 bg-cf-card/50 backdrop-blur-md hover:border-cf-primary/50 transition-all duration-300">
+        <Card className={cn(
+            "group relative overflow-hidden border-cf-border/40 bg-cf-card/50 backdrop-blur-md hover:border-cf-primary/50 transition-all duration-300",
+            className
+        )}>
             <div className="p-4">
                 <div className="flex justify-between items-start gap-4">
                     <div className="flex-1 min-w-0">
