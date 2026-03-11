@@ -1,12 +1,14 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { Card, CardHeader, CardTitle, CardContent } from '../components/ui/card';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
-import { Users, Swords, Timer, Trophy, Share2, Plus, Play, Info } from 'lucide-react';
+import { Users, Swords, Timer, Trophy, Share2, Plus, Play, Radio } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { codeforcesAPI, type Problem } from '../lib/api';
 import { ProblemCard } from '../components/features/ProblemCard';
 import { LiveLeaderboard } from '../components/features/LiveLeaderboard';
+import { useRealtimeRoom } from '../hooks/useRealtimeRoom';
 
 interface Room {
     id: string;
@@ -14,26 +16,40 @@ interface Room {
     host: string;
     problems: Problem[];
     duration: number; // minutes
-    participants: { 
-        handle: string; 
-        solved: string[];
-        submissions: Record<string, {
-            status: 'solved' | 'failed' | 'pending' | 'none';
-            attempts: number;
-            time: number;
-        }>;
-        totalSolved: number;
-        penalty: number;
-    }[];
+    participants: Participant[];
     startTime: number | null;
     status: 'waiting' | 'running' | 'finished';
-    messages: { sender: string, text: string, time: string }[];
+    messages: Message[];
 }
 
+interface Participant {
+    handle: string;
+    solved: string[];
+    submissions: Record<string, {
+        status: 'solved' | 'failed' | 'pending' | 'none';
+        attempts: number;
+        time: number;
+    }>;
+    totalSolved: number;
+    penalty: number;
+}
+
+interface Message { sender: string, text: string, time: string }
+
 export default function ContestRooms() {
+    const [searchParams] = useSearchParams();
+    const urlRoomId = searchParams.get('id');
+
     const [rooms, setRooms] = useState<Room[]>([]);
     const [isCreating, setIsCreating] = useState(false);
     const [activeRoom, setActiveRoom] = useState<Room | null>(null);
+    
+    const [myHandle] = useState(() => {
+        const saved = localStorage.getItem('cf_handle');
+        if (saved) return saved;
+        // Fallback for demo/guest
+        return 'Peer-' + Math.random().toString(36).substr(2, 4).toUpperCase();
+    });
     
     // Form state
     const [config, setConfig] = useState({
@@ -45,23 +61,57 @@ export default function ContestRooms() {
         duration: 120
     });
 
+    useEffect(() => {
+        if (urlRoomId && !activeRoom) {
+            // In a real P2P app, we'd wait for a peer to send us the state
+            // For now, we set a partial state and let useRealtimeRoom find the host
+            setActiveRoom({
+                id: urlRoomId,
+                name: 'Joining Room...',
+                host: '',
+                problems: [],
+                duration: 0,
+                participants: [],
+                startTime: null,
+                status: 'waiting',
+                messages: []
+            });
+        }
+    }, [urlRoomId]);
+
+    const [isLoading, setIsLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+
     const createRoom = async () => {
+        console.log('Starting room creation with config:', config);
+        setIsLoading(true);
+        setError(null);
         try {
             const allProblems = await codeforcesAPI.getProblems(config.tags ? config.tags.split(',') : undefined);
+            console.log(`Fetched ${allProblems.length} problems from API`);
+            
             const candidates = allProblems.filter(p => 
                 p.rating && p.rating >= config.minRating && p.rating <= config.maxRating
             );
+            console.log(`Found ${candidates.length} candidates after filtering`);
             
+            if (candidates.length === 0) {
+                setError('No problems found for the selected criteria. Try adjusting the ratings or tags.');
+                setIsLoading(false);
+                return;
+            }
+
             const selected = candidates.sort(() => 0.5 - Math.random()).slice(0, config.count);
+            const roomId = Math.random().toString(36).substr(2, 9);
             
             const newRoom: Room = {
-                id: Math.random().toString(36).substr(2, 9),
+                id: roomId,
                 name: config.name || 'New Practice Room',
-                host: 'You',
+                host: myHandle,
                 problems: selected,
                 duration: config.duration,
                 participants: [{ 
-                    handle: 'You', 
+                    handle: myHandle, 
                     solved: [], 
                     submissions: {}, 
                     totalSolved: 0, 
@@ -74,21 +124,16 @@ export default function ContestRooms() {
                 ]
             };
             
+            console.log('Room created successfully:', newRoom);
             setRooms([newRoom, ...rooms]);
             setActiveRoom(newRoom);
             setIsCreating(false);
         } catch (error) {
             console.error('Failed to create room:', error);
+            setError('Failed to fetch problems from Codeforces. Please try again later.');
+        } finally {
+            setIsLoading(false);
         }
-    };
-
-    const startContest = () => {
-        if (!activeRoom) return;
-        setActiveRoom({
-            ...activeRoom,
-            status: 'running',
-            startTime: Date.now()
-        });
     };
 
     return (
@@ -99,7 +144,7 @@ export default function ContestRooms() {
                         <Users className="w-10 h-10 text-cf-primary" />
                         CONTEST ROOMS
                     </h1>
-                    <p className="text-gray-400 mt-2 font-medium">Practice with friends in simulated contest environments.</p>
+                    <p className="text-gray-400 mt-2 font-medium">Practice with friends in real-time P2P environments.</p>
                 </div>
                 {!activeRoom && (
                     <Button 
@@ -113,7 +158,7 @@ export default function ContestRooms() {
             </div>
 
             {activeRoom ? (
-                <RoomInterface room={activeRoom} onLeave={() => setActiveRoom(null)} onStart={startContest} />
+                <RoomInterface room={activeRoom} myHandle={myHandle} onLeave={() => setActiveRoom(null)} />
             ) : isCreating ? (
                 <Card className="max-w-2xl mx-auto border-cf-primary/30 bg-cf-card/30 backdrop-blur-xl">
                     <CardHeader>
@@ -176,21 +221,38 @@ export default function ContestRooms() {
                                 />
                             </div>
                         </div>
+
+                        {error && (
+                            <div className="bg-red-500/10 border border-red-500/50 text-red-500 p-4 rounded-xl text-sm animate-in slide-in-from-top-2">
+                                {error}
+                            </div>
+                        )}
+
                         <div className="flex gap-3 pt-4">
                             <Button variant="outline" onClick={() => setIsCreating(false)} className="flex-1 rounded-xl h-12">Cancel</Button>
-                            <Button onClick={createRoom} className="flex-1 bg-cf-primary text-white font-bold rounded-xl h-12">Create Room</Button>
+                            <Button 
+                                onClick={createRoom} 
+                                disabled={isLoading}
+                                className="flex-1 bg-cf-primary hover:bg-cf-primary/80 text-white font-bold rounded-xl h-12 shadow-lg shadow-cf-primary/20 transition-all active:scale-95"
+                            >
+                                {isLoading ? (
+                                    <div className="flex items-center gap-2">
+                                        <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                        Creating...
+                                    </div>
+                                ) : 'Create Room'}
+                            </Button>
                         </div>
                     </CardContent>
                 </Card>
             ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {/* Placeholder for public/active rooms if any */}
                     <Card className="border-cf-border/30 bg-cf-card/20 border-dashed flex flex-col items-center justify-center p-12 text-center group hover:border-cf-primary/40 cursor-pointer transition-all" onClick={() => setIsCreating(true)}>
                         <div className="w-16 h-16 rounded-full bg-cf-darker flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
                             <Plus className="w-8 h-8 text-cf-primary" />
                         </div>
                         <h3 className="text-xl font-bold text-white">Create New Room</h3>
-                        <p className="text-gray-500 text-sm mt-2">Start a private practice session.</p>
+                        <p className="text-gray-500 text-sm mt-2">Start a private P2P session.</p>
                     </Card>
                     
                     {rooms.map(room => (
@@ -216,12 +278,12 @@ export default function ContestRooms() {
                                         {room.participants.length} Active
                                     </div>
                                     <div className="flex items-center gap-2">
-                                        <Trophy className="w-3.5 h-3.5" />
-                                        Solo Mode
+                                        <Radio className="w-3.5 h-3.5" />
+                                        P2P Enabled
                                     </div>
                                 </div>
                                 <Button onClick={() => setActiveRoom(room)} className="w-full bg-cf-darker group-hover:bg-cf-primary text-gray-400 group-hover:text-white transition-all font-bold rounded-xl">
-                                    Join Room
+                                    Enter Room
                                 </Button>
                             </div>
                         </Card>
@@ -232,28 +294,176 @@ export default function ContestRooms() {
     );
 }
 
-function RoomInterface({ room, onLeave, onStart }: { room: Room, onLeave: () => void, onStart: () => void }) {
-    const [timeLeft, setTimeLeft] = useState(room.duration * 60);
-    const [messages, setMessages] = useState(room.messages);
+function RoomInterface({ room: initialRoom, myHandle, onLeave }: { room: Room, myHandle: string, onLeave: () => void }) {
+    const { peers, roomState, participants: p2pParticipants, messages: p2pMessages, broadcastRoomState, broadcastMyState, sendChatMessage, requestRoomState } = useRealtimeRoom(initialRoom.id, myHandle);
+    
+    const [localRoom, setLocalRoom] = useState<Room>(initialRoom);
+    const [timeLeft, setTimeLeft] = useState(initialRoom.duration * 60);
     const [chatInput, setChatInput] = useState('');
     const [showReplay, setShowReplay] = useState(false);
-    
+
+    const [myState, setMyState] = useState<Participant>(() => {
+        const existing = initialRoom.participants.find(p => p.handle === myHandle);
+        return existing || {
+            handle: myHandle,
+            solved: [],
+            submissions: {},
+            totalSolved: 0,
+            penalty: 0
+        };
+    });
+
+    // Sync room state from peers/host
     useEffect(() => {
-        if (room.status === 'running' && timeLeft > 0) {
+        if (roomState) {
+            console.log('Received room state update:', roomState);
+            setLocalRoom(prev => ({
+                ...prev,
+                ...roomState,
+                // Preserving local messages and myHandle from initialRoom if needed
+                messages: (roomState.messages && roomState.messages.length > prev.messages.length) ? roomState.messages : prev.messages
+            }));
+
+            // Sync timer if running
+            if (roomState.status === 'running' && roomState.startTime) {
+                const elapsedSeconds = Math.floor((Date.now() - roomState.startTime) / 1000);
+                const remaining = Math.max(0, roomState.duration * 60 - elapsedSeconds);
+                setTimeLeft(remaining);
+            } else if (roomState.status === 'waiting') {
+                setTimeLeft(roomState.duration * 60);
+            }
+        }
+    }, [roomState]);
+
+    // Request state if we don't have it (Joining state)
+    useEffect(() => {
+        if (localRoom.name === 'Joining Room...' && peers.length > 0) {
+            const interval = setInterval(() => {
+                if (localRoom.name === 'Joining Room...') {
+                    console.log('Still joining... requesting room state from peers...');
+                    requestRoomState();
+                } else {
+                    clearInterval(interval);
+                }
+            }, 3000);
+            return () => clearInterval(interval);
+        }
+    }, [peers.length, localRoom.name, requestRoomState]);
+
+    // Host: Listen for state requests
+    useEffect(() => {
+        const handleRequest = (e: any) => {
+            if (localRoom.host === myHandle) {
+                console.log('Responding to state request from:', e.detail.peerId);
+                broadcastRoomState({
+                    id: localRoom.id,
+                    name: localRoom.name,
+                    host: localRoom.host,
+                    problems: localRoom.problems,
+                    duration: localRoom.duration,
+                    status: localRoom.status,
+                    startTime: localRoom.startTime,
+                    messages: localRoom.messages
+                });
+            }
+        };
+        window.addEventListener('requestRoomState', handleRequest);
+        return () => window.removeEventListener('requestRoomState', handleRequest);
+    }, [localRoom, myHandle, broadcastRoomState]);
+
+    // Host: Broadcast state to new peers automatically
+    useEffect(() => {
+        if (localRoom.host === myHandle && peers.length > 0) {
+            broadcastRoomState({
+                id: localRoom.id,
+                name: localRoom.name,
+                host: localRoom.host,
+                problems: localRoom.problems,
+                duration: localRoom.duration,
+                status: localRoom.status,
+                startTime: localRoom.startTime,
+                messages: localRoom.messages
+            });
+        }
+    }, [peers.length, localRoom.id, localRoom.status, broadcastRoomState, myHandle]);
+
+    // Broadcast our own state whenever it changes
+    useEffect(() => {
+        broadcastMyState(myState);
+        // If host, also update localRoom participants list for local consistency
+        if (localRoom.host === myHandle) {
+            setLocalRoom(prev => ({
+                ...prev,
+                participants: prev.participants.map(p => p.handle === myHandle ? myState : p)
+            }));
+        }
+    }, [myState, broadcastMyState, localRoom.host, myHandle]);
+
+    useEffect(() => {
+        if (localRoom.status === 'running' && timeLeft > 0) {
             const timer = setInterval(() => setTimeLeft(t => t - 1), 1000);
             return () => clearInterval(timer);
         }
-    }, [room.status, timeLeft]);
+    }, [localRoom.status, timeLeft]);
 
     const handleSendMessage = () => {
         if (!chatInput.trim()) return;
         const newMessage = {
-            sender: 'You',
+            sender: myHandle,
             text: chatInput,
             time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
         };
-        setMessages([...messages, newMessage]);
+        sendChatMessage(newMessage);
         setChatInput('');
+    };
+
+    const handleSolve = (problemIndex: string, status: 'solved' | 'failed') => {
+        const startTime = localRoom.startTime || Date.now();
+        const elapsedMinutes = Math.floor((Date.now() - startTime) / 60000);
+        
+        setMyState(prev => {
+            const current = prev.submissions[problemIndex] || { attempts: 0, status: 'none', time: 0 };
+            if (current.status === 'solved') return prev; // Already solved
+
+            const newAttempts = current.attempts + 1;
+            const newStatus = status;
+            const newSolved = status === 'solved' ? [...prev.solved, problemIndex] : prev.solved;
+            const penaltyIncrease = status === 'solved' ? elapsedMinutes + (newAttempts - 1) * 20 : 0;
+
+            return {
+                ...prev,
+                solved: newSolved,
+                submissions: {
+                    ...prev.submissions,
+                    [problemIndex]: {
+                        status: newStatus,
+                        attempts: newAttempts,
+                        time: status === 'solved' ? elapsedMinutes : 0
+                    }
+                },
+                totalSolved: newSolved.length,
+                penalty: prev.penalty + penaltyIncrease
+            };
+        });
+    };
+
+    const startContest = () => {
+        const startedRoom = {
+            ...localRoom,
+            status: 'running' as const,
+            startTime: Date.now()
+        };
+        setLocalRoom(startedRoom);
+        broadcastRoomState({
+            id: startedRoom.id,
+            name: startedRoom.name,
+            host: startedRoom.host,
+            problems: startedRoom.problems,
+            duration: startedRoom.duration,
+            status: startedRoom.status,
+            startTime: startedRoom.startTime,
+            messages: startedRoom.messages
+        });
     };
 
     const formatTime = (seconds: number) => {
@@ -262,6 +472,28 @@ function RoomInterface({ room, onLeave, onStart }: { room: Room, onLeave: () => 
         const s = seconds % 60;
         return `${h > 0 ? h + ':' : ''}${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
     };
+
+    const allParticipants = useMemo(() => {
+        // Build the list of all participants.
+        // If we are host, our state is in localRoom.participants (updated via useEffect)
+        // If we are guest, we use myState + p2pParticipants.
+        
+        const peersList = Object.values(p2pParticipants);
+        const list = [myState];
+
+        peersList.forEach(p => {
+            if (p.handle !== myHandle) {
+                list.push(p);
+            }
+        });
+
+        // Sort by solved (desc) then penalty (asc)
+        return list.sort((a, b) => b.totalSolved - a.totalSolved || a.penalty - b.penalty);
+    }, [myState, p2pParticipants, myHandle]);
+
+    const allMessages = useMemo(() => {
+        return [...localRoom.messages, ...p2pMessages];
+    }, [localRoom.messages, p2pMessages]);
 
     return (
         <div className="space-y-6 animate-in slide-in-from-bottom-4 duration-500">
@@ -272,8 +504,12 @@ function RoomInterface({ room, onLeave, onStart }: { room: Room, onLeave: () => 
                             <div className="flex items-center gap-4">
                                 <Button variant="outline" size="sm" onClick={onLeave} className="rounded-lg h-9">← Back</Button>
                                 <div>
-                                    <h2 className="text-2xl font-black text-white">{room.name}</h2>
-                                    <p className="text-xs text-gray-500 font-mono">ROOM ID: {room.id}</p>
+                                    <h2 className="text-2xl font-black text-white">{localRoom.name}</h2>
+                                    <div className="flex items-center gap-2">
+                                        <p className="text-xs text-gray-500 font-mono">ROOM ID: {localRoom.id}</p>
+                                        <span className="text-[10px] bg-cf-primary/20 text-cf-primary px-1.5 rounded">{myHandle} (You)</span>
+                                        <span className="text-[10px] bg-green-500/20 text-green-500 px-1.5 rounded animate-pulse">● Live ({peers.length + 1})</span>
+                                    </div>
                                 </div>
                             </div>
                             
@@ -287,8 +523,8 @@ function RoomInterface({ room, onLeave, onStart }: { room: Room, onLeave: () => 
                                         {formatTime(timeLeft)}
                                     </div>
                                 </div>
-                                {room.status === 'waiting' && (
-                                    <Button onClick={onStart} className="bg-cf-primary text-white font-bold h-12 px-8 rounded-xl shadow-lg shadow-cf-primary/20 gap-2">
+                                {localRoom.status === 'waiting' && localRoom.host === 'You' && (
+                                    <Button onClick={startContest} className="bg-cf-primary text-white font-bold h-12 px-8 rounded-xl shadow-lg shadow-cf-primary/20 gap-2">
                                         <Play className="w-5 h-5" />
                                         Start Contest
                                     </Button>
@@ -297,7 +533,7 @@ function RoomInterface({ room, onLeave, onStart }: { room: Room, onLeave: () => 
                         </div>
                         
                         <div className="p-6">
-                            {room.status === 'finished' ? (
+                            {localRoom.status === 'finished' ? (
                                 <div className="space-y-8 animate-in zoom-in-95 duration-500">
                                     <div className="text-center space-y-2">
                                         <Trophy className="w-16 h-16 text-yellow-500 mx-auto drop-shadow-lg" />
@@ -312,11 +548,11 @@ function RoomInterface({ room, onLeave, onStart }: { room: Room, onLeave: () => 
                                         </div>
                                         <div className="p-6 rounded-2xl bg-cf-darker border border-cf-border/30 text-center">
                                             <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">Solved</p>
-                                            <p className="text-3xl font-black text-white">{room.participants[0].totalSolved} / {room.problems.length}</p>
+                                            <p className="text-3xl font-black text-white">{allParticipants[0]?.totalSolved || 0} / {localRoom.problems.length}</p>
                                         </div>
                                         <div className="p-6 rounded-2xl bg-cf-darker border border-cf-border/30 text-center">
                                             <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">XP Gained</p>
-                                            <p className="text-3xl font-black text-green-500">+{room.participants[0].totalSolved * 50}</p>
+                                            <p className="text-3xl font-black text-green-500">+{(allParticipants[0]?.totalSolved || 0) * 50}</p>
                                         </div>
                                     </div>
 
@@ -332,8 +568,8 @@ function RoomInterface({ room, onLeave, onStart }: { room: Room, onLeave: () => 
                                         </div>
                                         {showReplay && (
                                             <div className="p-6 space-y-4">
-                                                {room.participants[0].solved.length > 0 ? (
-                                                    room.participants[0].solved.map((p, idx) => (
+                                                {allParticipants[0]?.solved.length > 0 ? (
+                                                    allParticipants[0].solved.map((p, idx) => (
                                                         <div key={p} className="flex items-center gap-4">
                                                             <div className="w-2 h-2 rounded-full bg-cf-primary" />
                                                             <div className="text-sm font-bold text-gray-300">00:{15 + idx * 10}:00</div>
@@ -349,9 +585,21 @@ function RoomInterface({ room, onLeave, onStart }: { room: Room, onLeave: () => 
                                 </div>
                             ) : (
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    {room.problems.map((p) => (
-                                        <ProblemCard key={p.index} problem={p} isSimulation={true} />
-                                    ))}
+                                    {localRoom.problems.length > 0 ? (
+                                        localRoom.problems.map((p) => (
+                                            <ProblemCard 
+                                                key={`${p.contestId}${p.index}`} 
+                                                problem={p} 
+                                                isSimulation={true} 
+                                                onSolve={(status) => handleSolve(p.index, status)}
+                                            />
+                                        ))
+                                    ) : (
+                                        <div className="col-span-2 py-20 text-center space-y-4">
+                                            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-cf-primary mx-auto" />
+                                            <p className="text-gray-500 font-medium">Waiting for room host to broadcast configuration...</p>
+                                        </div>
+                                    )}
                                 </div>
                             )}
                         </div>
@@ -368,8 +616,8 @@ function RoomInterface({ room, onLeave, onStart }: { room: Room, onLeave: () => 
                         </CardHeader>
                         <CardContent className="px-2">
                              <LiveLeaderboard 
-                                participants={room.participants} 
-                                problems={room.problems} 
+                                participants={allParticipants} 
+                                problems={localRoom.problems} 
                                 compact={true} 
                             />
                         </CardContent>
@@ -384,18 +632,18 @@ function RoomInterface({ room, onLeave, onStart }: { room: Room, onLeave: () => 
                         </CardHeader>
                         <CardContent className="flex-1 flex flex-col min-h-0">
                             <div className="flex-1 overflow-y-auto space-y-3 pr-2 mb-4 scrollbar-thin scrollbar-thumb-cf-border">
-                                {messages.map((m, i) => (
+                                {allMessages.map((m, i) => (
                                     <div key={i} className={cn(
                                         "flex flex-col gap-1",
-                                        m.sender === 'You' ? "items-end" : "items-start"
+                                        m.sender === myHandle ? "items-end" : "items-start"
                                     )}>
                                         <div className="flex items-center gap-2">
-                                            <span className="text-[10px] font-bold text-gray-500">{m.sender}</span>
+                                            <span className="text-[10px] font-bold text-gray-500">{m.sender === myHandle ? 'You' : m.sender}</span>
                                             <span className="text-[10px] text-gray-600">{m.time}</span>
                                         </div>
                                         <div className={cn(
                                             "px-3 py-2 rounded-2xl text-xs max-w-[90%]",
-                                            m.sender === 'You' ? "bg-cf-primary text-white rounded-tr-none" : "bg-cf-darker text-gray-300 rounded-tl-none border border-cf-border/30"
+                                            m.sender === myHandle ? "bg-cf-primary text-white rounded-tr-none" : "bg-cf-darker text-gray-300 rounded-tl-none border border-cf-border/30"
                                         )}>
                                             {m.text}
                                         </div>
@@ -426,14 +674,14 @@ function RoomInterface({ room, onLeave, onStart }: { room: Room, onLeave: () => 
                         </CardHeader>
                         <CardContent className="space-y-4 text-sm">
                             <div className="flex items-center gap-2 text-cf-primary bg-cf-primary/5 p-3 rounded-xl border border-cf-primary/10">
-                                <Info className="w-4 h-4 shrink-0" />
-                                <p className="text-[10px] leading-tight font-medium">Results are calculated automatically based on CF API submissions while the timer is running.</p>
+                                <Radio className="w-4 h-4 shrink-0" />
+                                <p className="text-[10px] leading-tight font-medium">Peer-to-Peer synchronization enabled. No backend required.</p>
                             </div>
                             <Button 
                                 variant="outline" 
                                 className="w-full h-10 rounded-xl gap-2 border-cf-border/50 group"
                                 onClick={() => {
-                                    navigator.clipboard.writeText(window.location.origin + '/rooms?id=' + room.id);
+                                    navigator.clipboard.writeText(window.location.origin + '/rooms?id=' + localRoom.id);
                                     alert('Invite link copied!');
                                 }}
                             >

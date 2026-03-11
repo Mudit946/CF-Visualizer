@@ -14,7 +14,7 @@ interface Participant {
 
 interface LiveLeaderboardProps {
     participants: Participant[];
-    problems: { index: string }[];
+    problems: { index: string, contestId?: number | string }[];
     compact?: boolean;
 }
 
@@ -32,7 +32,7 @@ export function LiveLeaderboard({ participants, problems, compact = false }: Liv
                         <th className="p-4 text-[10px] font-bold uppercase tracking-widest text-gray-500 w-12">#</th>
                         <th className="p-4 text-[10px] font-bold uppercase tracking-widest text-gray-500">Handle</th>
                         {problems.map(p => (
-                            <th key={p.index} className="p-4 text-[10px] font-bold uppercase tracking-widest text-gray-500 text-center w-16">
+                            <th key={`${p.contestId}${p.index}`} className="p-4 text-[10px] font-bold uppercase tracking-widest text-gray-500 text-center w-16">
                                 {p.index}
                             </th>
                         ))}
@@ -69,7 +69,7 @@ export function LiveLeaderboard({ participants, problems, compact = false }: Liv
                             {problems.map(p => {
                                 const sub = participant.submissions[p.index] || { status: 'none', attempts: 0 };
                                 return (
-                                    <td key={p.index} className="p-2">
+                                    <td key={`${p.contestId}${p.index}`} className="p-2">
                                         <div className={cn(
                                             "h-10 rounded flex flex-col items-center justify-center transition-all",
                                             sub.status === 'solved' ? "bg-green-500/20 border border-green-500/30 text-green-500" :

@@ -1,124 +1,118 @@
-# Codeforces Visualizer Pro
+# 🚀 Codeforces Visualizer Pro
 
-Codeforces Visualizer Pro is a modern full-stack analytics and training platform for competitive programmers. It transforms raw Codeforces data into actionable insights, structured training, and collaborative practice environments.
-
-Unlike traditional tools that only show statistics, this platform focuses on performance analytics, gamified learning, and collaborative contest simulation.
+Codeforces Visualizer Pro is a high-performance, real-time analytics and training platform for competitive programmers. It transforms raw Codeforces data into actionable insights, structured training, and collaborative practice environments.
 
 ---
 
 ## 👁️ Vision
 
-The goal of this platform is to create a complete competitive programming training ecosystem where users can:
-- **Analyze** their Codeforces performance in depth.
-- **Identify** algorithmic weaknesses and blind spots.
-- **Practice** with personalized, growth-oriented recommendations.
-- **Compete** with friends in simulated environments.
-- **Track** daily progress with consistency metrics similar to fitness trackers.
-- **Improve** consistently through a gamified learning journey.
+Our goal is to create a complete training ecosystem where users can:
+- **Analyze** performance with interactive, depth-first analytics.
+- **Identify** algorithmic blind spots via AI-powered topic analysis.
+- **Practice** with personalized, growth-oriented recommendation engines.
+- **Collaborate** in real-time P2P contest rooms with friends.
+- **Gamify** the learning journey with streaks, badges, and XP.
 
 ---
 
 ## ✨ Core Features
 
-### 📊 Dynamic User Profiles
-Search for any Codeforces handle to view detailed statistics fetched dynamically from the official API:
-- **Real-time Stats:** Current rating, Max rating, and Rank.
-- **Visual Breakdown:** Submission history, contest participation, and solved problem distribution.
+### 📊 Advanced Analytics
+- **Dynamic Profiles:** Real-time stats, rank zones, and submission distribution.
+- **Rating Progression:** Animated charts with context-aware performance highlights.
+- **Submission Heatmap:** GitHub-style activity tracker and streak monitor.
+- **Tag Radar & Difficulty Distribution:** Holistic view of your algorithmic expertise.
 
-### 📈 Rating Progression Analytics
-Interactive charts provide detailed insights into your competitive journey:
-- **Animated Graphs:** Smooth visual representation of rating over time.
-- **Rank Zones:** Backgrounds color-coded by Codeforces rating bands.
-- **Insightful Context:** Hover-based contest details and performance highlights.
+### 🧠 Intelligent Training
+- **Upsolving Assistant:** Automated detection of unsolved contest problems.
+- **Growth Zone Recommendations:** Problem suggestions tailored to your current rating.
+- **Virtual Mashup Generator:** Create custom contests with specific difficulty ranges.
+- **Difficulty Path:** Progressive problem ladders for structured skill building.
 
-**Rating Band Reference:**
-| Rating | Rank |
-| :--- | :--- |
-| < 1200 | Newbie |
-| 1200–1399 | Pupil |
-| 1400–1599 | Specialist |
-| 1600–1899 | Expert |
-| 1900–2099 | Candidate Master |
-| 2100+ | Master |
+### 👥 Collaborative Practice (P2P)
+- **Custom Contest Rooms:** Create private rooms for timed practice.
+- **P2P Synchronization:** Real-time leaderboard, chat, and status updates using Trystero (no backend required).
+- **Practice Battles:** Timed 1v1 duels with live tracking.
 
-### 🗓️ Submission Activity Heatmap
-A GitHub-style calendar heatmap to visualize daily coding activity, tracking practice consistency, and longest streaks.
-
-### 📊 Performance Charts
-- **Problem Difficulty Distribution:** Understand your comfort zone with a breakdown of solved problems by rating.
-- **Tag Performance Radar:** Quick identification of strengths and weaknesses across algorithmic topics (DP, Graphs, Math, etc.).
+### 🎮 Gamification & AI
+- **Badge System:** Unlock achievements like "Graph Master" or "7-Day Streak".
+- **AI Practice Coach:** Personalized daily training plans and performance analysis.
+- **AI Editorial Explainer:** Simplified walkthroughs for complex problems.
+- **Rating Predictor:** Forecasting future performance based on current trends.
 
 ---
 
-## 🛠️ Advanced Training Tools
+## 🏗️ Architecture
 
-### 🆘 Upsolving Assistant
-Automatically detects problems from past contests that you attempted but didn't solve, encouraging effective post-contest learning.
-
-### 🧠 Practice Recommendation Engine
-Analyzes your solved history to suggest problems in your **Growth Zone**: `Current Rating ± 200`.
-
-### 🎲 Virtual Mashup Generator
-Generate custom practice contests by specifying number of problems, difficulty ranges, and division simulation.
-
-### 📝 Training Context System
-- **Bookmarks:** Save problems to revisit.
-- **Practice Queue:** Organize your daily workflow.
-- **Personal Notes:** Attach hints or strategies to specific problems (stored locally).
-
----
-
-## 🏗️ Architecture Overview
-
-Built as a high-performance React Single Page Application.
+Codeforces Visualizer Pro is a modern React SPA designed for speed and reliability.
 
 ### 🔄 Data Flow
 ```mermaid
 graph TD
-    User([User]) -->|Enters Handle| Home[Home Page]
-    Home -->|Navigation| Dashboard[Dashboard Page]
-    Dashboard -->|Calls| API[Codeforces API Service]
-    API -->|Returns Data| Dashboard
-    Dashboard -->|Populates| Charts[Recharts Components]
-    Dashboard -->|Populates| Tools[Feature Tools]
-    Tools -->|Interact with| Context[Training Context]
-    Context <-->|Sync| LocalStorage[(Browser Local Storage)]
+    User([User]) -->|Input| UI[React UI]
+    UI -->|Hooks| Context[TrainingContext]
+    Context -->|P2P| P2P[Trystero Networking]
+    Context -->|API| CF_API[Codeforces API Service]
+    Context -->|Persistence| Storage[(LocalStorage)]
+    CF_API -->|Data| Context
+    P2P <-->|Sync| Peers[Collaborating Peers]
 ```
 
-### 📂 Core Structure
-- **API Tier (`src/lib/api.ts`):** Robust abstraction over the official CF API.
-- **State (`src/context/`):** Persistent training context using custom hooks.
-- **UI Components:** Modular library divided into `charts`, `features`, `tools`, and `ui`.
+### 📂 Project Structure
+- **`/src/pages`**: Main application views (Dashboard, Home, ContestRooms).
+- **`/src/components/features`**: Core logic for trackers, analyzers, and simulators.
+- **`/src/context`**: `TrainingContext.tsx` handles global state and persistence.
+- **`/src/hooks`**: `useRealtimeRoom.ts` abstracts the P2P networking logic.
+- **`/src/lib/api.ts`**: Centralized API client for Codeforces integration.
+
+### 📡 P2P Logic (Trystero)
+The platform uses **Trystero (BitTorrent)** for real-time collaboration.
+- **Discovery**: Peers connect using unique Room IDs passed in the URL.
+- **State Sync**: Hosts broadcast room configurations and problem sets; guests request state upon entry.
+- **Live Leaderboard**: Solves are broadcasted instantly to keep all participants in sync.
 
 ---
 
-## 🗺️ Future Roadmap
+## 💻 Getting Started
 
-We are constantly evolving the platform. Here are the features currently in development:
+### Prerequisites
+- Node.js (v18+)
+- npm or yarn
 
-### 👥 Collaborative Features
-- **Custom Contest Rooms:** Private rooms with live leaderboards and real-time tracking.
-- **1v1 Practice Battles:** Challenge friends to timed coding duels.
+### Installation
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/your-repo/cf-visualizer.git
+   ```
+2. Install dependencies:
+   ```bash
+   npm install
+   ```
+3. Start the development server:
+   ```bash
+   npm run dev
+   ```
 
-### 🎮 Gamified Learning
-- **XP & Points System:** Earn experience for solving problems and completing daily goals.
-- **Achievement Badges:** Unlock honors like 🔥 7-Day Streak or 🧠 Graph Master.
-
-### 🤖 AI-Powered Features
-- **Weak Topic Analyzer:** automated detection of algorithmic blind spots.
-- **AI Practice Coach:** Personalized daily training plans.
-- **Rating Predictor:** Future rating forecasting based on accuracy and consistency.
-- **AI Editorial Explainer:** Simplified explanations of complex problem strategies.
+### Deployment
+The project is configured for easy deployment on **Vercel** or other SPA hosting providers.
+```bash
+npm run build
+```
 
 ---
 
-## 💻 Tech Stack
+## 🤝 Contributing
 
-- **Core:** React 18, Vite, TypeScript
-- **Styling:** Tailwind CSS (Vibrant Dark Mode)
-- **Visualization:** Recharts, Framer Motion
-- **Services:** Codeforces API, LocalStorage API
+We welcome contributions! To add a new feature:
+
+1. **Components**: Place new features in `src/components/features`.
+2. **State**: If global state is needed, update `TrainingContext.tsx`.
+3. **Styling**: Use the existing design system in `index.css` (Glassmorphism + CF Branding).
+4. **Testing**: Ensure the build passes before submitting a PR.
+   ```bash
+   npm run build
+   ```
 
 ---
 
-*Built by the Google DeepMind Antigravity Team to elevate the competitive programming experience.*
+*Built with passion to elevate the competitive programming experience.*

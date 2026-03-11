@@ -20,10 +20,11 @@ interface ProblemCardProps {
     problem: Problem;
     showEditorial?: boolean;
     isSimulation?: boolean;
+    onSolve?: (status: 'solved' | 'failed') => void;
     className?: string;
 }
 
-export function ProblemCard({ problem, showEditorial = true, isSimulation = false, className }: ProblemCardProps) {
+export function ProblemCard({ problem, showEditorial = true, isSimulation = false, onSolve, className }: ProblemCardProps) {
     const {
         focusMode,
         isBookmarked, addBookmark, removeBookmark,
@@ -163,14 +164,36 @@ export function ProblemCard({ problem, showEditorial = true, isSimulation = fals
                             </>
                         )}
                         {isSimulation && (
-                            <a
-                                href={`https://codeforces.com/contest/${problem.contestId}/problem/${problem.index}`}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="h-8 px-4 text-xs font-bold bg-cf-primary hover:bg-cf-primary/80 text-white rounded-md flex items-center transition-colors"
-                            >
-                                Solve Now
-                            </a>
+                            <div className="flex gap-2">
+                                <a
+                                    href={`https://codeforces.com/contest/${problem.contestId}/problem/${problem.index}`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="h-8 px-4 text-xs font-bold bg-cf-primary hover:bg-cf-primary/80 text-white rounded-md flex items-center transition-colors"
+                                >
+                                    Solve
+                                </a>
+                                {onSolve && (
+                                    <>
+                                        <Button 
+                                            size="sm" 
+                                            variant="outline" 
+                                            onClick={() => onSolve('solved')}
+                                            className="h-8 px-3 text-[10px] font-bold border-green-500/30 text-green-500 hover:bg-green-500/10"
+                                        >
+                                            Mark Solved
+                                        </Button>
+                                        <Button 
+                                            size="sm" 
+                                            variant="outline" 
+                                            onClick={() => onSolve('failed')}
+                                            className="h-8 px-3 text-[10px] font-bold border-red-500/30 text-red-500 hover:bg-red-500/10"
+                                        >
+                                            Mark Failed
+                                        </Button>
+                                    </>
+                                )}
+                            </div>
                         )}
                     </div>
                 </div>
